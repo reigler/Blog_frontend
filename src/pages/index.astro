@@ -1,11 +1,44 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
+// Fetch blog posts from Strapi
+const STRAPI_URL = import.meta.env.STRAPI_URL;
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const response = await fetch(`${STRAPI_URL}/api/blog-posts?populate=cover`);
+const posts = await response.json();
 ---
 
-<Layout>
-	<Welcome />
-</Layout>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>My Blog</title>
+  </head>
+  <body>
+    <h1>My Blog Posts</h1>
+    
+    <main>
+      {
+        posts.data.map((post) => (
+          <article>
+            <h2>
+              <a href={`/posts/${post.attributes.slug}`}>
+                {post.attributes.title}
+              </a>
+            </h2>
+            <p>{post.attributes.description}</p>
+            
+            {post.attributes.cover.data && (
+              <img 
+                src={`${STRAPI_URL}${post.attributes.cover.data.attributes.url}`}
+                alt={post.attributes.title}
+                width="200"
+              />
+            )}
+            
+            <a href={`/posts/${post.attributes.slug}`}>Read more →</a>
+            <hr />
+          </article>
+        ))
+      }
+    </main>
+  </body>
+</html>

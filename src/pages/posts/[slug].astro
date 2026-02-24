@@ -1,0 +1,46 @@
+---
+// Dynamic route for single blog posts
+export async function getStaticPaths() {
+  const STRAPI_URL = import.meta.env.STRAPI_URL;
+  const response = await fetch(`${STRAPI_URL}/api/blog-posts`);
+  const posts = await response.json();
+  
+  return posts.data.map((post) => ({
+    params: { slug: post.attributes.slug },
+  }));
+}
+
+const { slug } = Astro.params;
+const STRAPI_URL = import.meta.env.STRAPI_URL;
+
+const response = await fetch(
+  `${STRAPI_URL}/api/blog-posts?filters[slug][$eq]=${slug}&populate=cover`
+);
+const postData = await response.json();
+const post = postData.data[0];
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{post.attributes.title}</title>
+  </head>
+  <body>
+    <a href="/">← Back to all posts</a>
+    
+    <article>
+      <h1>{post.attributes.title}</h1>
+      
+      {post.attributes.cover.data && (
+        <img 
+          src={`${STRAPI_URL}${post.attributes.cover.data.attributes.url}`}
+          alt={post.attributes.title}
+          width="400"
+        />
+      )}
+      
+      <div set:html={post.attributes.content} />
+    </article>
+  </body>
+</html>

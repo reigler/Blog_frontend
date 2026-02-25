@@ -33,6 +33,7 @@ export async function fetchAPI(path, options = {}) {
   const requestUrl = path.startsWith('http') ? path : `${BASE_URL}${path}`;
   
   try {
+    console.log('Fetching from:', requestUrl);
     const response = await fetch(requestUrl, mergedOptions);
     
     if (!response.ok) {
@@ -75,7 +76,13 @@ function normalizeCategory(category) {
       Description: category.attributes.Description
     };
   }
-  return category;
+  return {
+    id: category.id,
+    documentId: category.documentId,
+    Name: category.Name,
+    Slug: category.Slug,
+    Description: category.Description
+  };
 }
 
 // Normalize post data with categories
@@ -94,11 +101,11 @@ function normalizePost(post) {
     Cover: post.Cover,
   };
   
-  // Add categories if they exist
+  // Add categories if they exist - handle different possible structures
   if (post.categories) {
     if (Array.isArray(post.categories)) {
       normalized.categories = post.categories.map(normalizeCategory);
-    } else if (post.categories.data) {
+    } else if (post.categories.data && Array.isArray(post.categories.data)) {
       normalized.categories = post.categories.data.map(normalizeCategory);
     } else {
       normalized.categories = [];
@@ -110,8 +117,9 @@ function normalizePost(post) {
   return normalized;
 }
 
-// Export functions
+// Export functions with correct Strapi v5 populate syntax
 export async function fetchPosts() {
+  // Strapi v5 syntax: populate[field][populate][subfield]=*
   const data = await fetchAPI('/api/blog-posts?populate[Cover]=*&populate[categories]=*');
   if (!data || !data.data) return [];
   return data.data.map(normalizePost);

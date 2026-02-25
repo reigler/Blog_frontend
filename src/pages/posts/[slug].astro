@@ -1,6 +1,6 @@
 ---
 import BlogLayout from '/src/layouts/BlogLayout.astro';
-import { fetchPosts, fetchPostBySlug, getImageUrl } from '../../lib/strapi';
+import { fetchPosts, fetchPostBySlug, fetchRelatedPosts, getImageUrl } from '../../lib/strapi';
 
 export async function getStaticPaths() {
   const posts = await fetchPosts();
@@ -11,6 +11,7 @@ export async function getStaticPaths() {
 
 const { slug } = Astro.params;
 const post = await fetchPostBySlug(slug);
+const relatedPosts = post ? await fetchRelatedPosts(post, 3) : [];
 
 // Function to render Strapi Blocks content
 function renderBlocks(blocks) {
@@ -100,18 +101,18 @@ function renderBlocks(blocks) {
           </div>
         </header>
 
-        <!-- Post Content - Fixed! -->
+        <!-- Post Content -->
         <div 
           class="prose prose-lg max-w-none prose-headings:text-gray-900 prose-a:text-blue-600"
           set:html={renderBlocks(post.Content)} 
         />
 
         <!-- Related Posts Section -->
-        {post.relatedPosts && post.relatedPosts.length > 0 && (
+        {relatedPosts.length > 0 && (
           <div class="mt-16 pt-8 border-t">
             <h2 class="text-2xl font-bold text-gray-900 mb-6">You might also like</h2>
             <div class="grid gap-6 md:grid-cols-3">
-              {post.relatedPosts.map((related) => (
+              {relatedPosts.map((related) => (
                 <a 
                   href={`/posts/${related.Slug}`}
                   class="group block"

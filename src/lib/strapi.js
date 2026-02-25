@@ -65,21 +65,15 @@ export function getImageUrl(cover) {
   return null;
 }
 
-// Normalize category data - WITHOUT description
+// Normalize category data
 function normalizeCategory(category) {
-  if (category.attributes) {
-    return {
-      id: category.id,
-      documentId: category.documentId,
-      Name: category.attributes.Name,
-      Slug: category.attributes.Slug,
-    };
-  }
+  if (!category) return null;
+  
   return {
     id: category.id,
     documentId: category.documentId,
-    Name: category.Name,
-    Slug: category.Slug,
+    Name: category.Name || category.attributes?.Name,
+    Slug: category.Slug || category.attributes?.Slug,
   };
 }
 
@@ -99,15 +93,11 @@ function normalizePost(post) {
     Cover: post.Cover,
   };
   
-  // Add categories if they exist - handle different possible structures
-  if (post.categories) {
-    if (Array.isArray(post.categories)) {
-      normalized.categories = post.categories.map(normalizeCategory);
-    } else if (post.categories.data && Array.isArray(post.categories.data)) {
-      normalized.categories = post.categories.data.map(normalizeCategory);
-    } else {
-      normalized.categories = [];
-    }
+  // Handle categories - they come directly as an array
+  if (post.categories && Array.isArray(post.categories)) {
+    normalized.categories = post.categories
+      .map(normalizeCategory)
+      .filter(cat => cat !== null);
   } else {
     normalized.categories = [];
   }
@@ -124,12 +114,12 @@ export async function fetchPosts() {
 }
 
 export async function fetchPostBySlug(slug) {
+  // Fix: Use correct filter syntax and populate
   const data = await fetchAPI(`/api/blog-posts?filters[Slug][$eq]=${slug}&populate=Cover,categories`);
   if (!data || !data.data || data.data.length === 0) return null;
   return normalizePost(data.data[0]);
 }
 
-// ADD THIS MISSING FUNCTION
 export async function fetchCategories() {
   const data = await fetchAPI('/api/categories');
   if (!data || !data.data) return [];

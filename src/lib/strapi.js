@@ -117,25 +117,20 @@ function normalizePost(post) {
 
 // Export functions with correct Strapi v5 populate syntax
 export async function fetchPosts() {
-  const data = await fetchAPI('/api/blog-posts?populate[Cover]=*&populate[categories]=*');
+  // Use simpler populate syntax
+  const data = await fetchAPI('/api/blog-posts?populate=Cover,categories');
   if (!data || !data.data) return [];
   return data.data.map(normalizePost);
 }
 
 export async function fetchPostBySlug(slug) {
-  const data = await fetchAPI(`/api/blog-posts?filters[Slug][$eq]=${slug}&populate[Cover]=*&populate[categories]=*`);
+  const data = await fetchAPI(`/api/blog-posts?filters[Slug][$eq]=${slug}&populate=Cover,categories`);
   if (!data || !data.data || data.data.length === 0) return null;
   return normalizePost(data.data[0]);
 }
 
-export async function fetchCategories() {
-  const data = await fetchAPI('/api/categories');
-  if (!data || !data.data) return [];
-  return data.data.map(normalizeCategory);
-}
-
 export async function fetchPostsByCategory(categorySlug) {
-  const data = await fetchAPI(`/api/blog-posts?filters[categories][Slug][$eq]=${categorySlug}&populate[Cover]=*&populate[categories]=*`);
+  const data = await fetchAPI(`/api/blog-posts?filters[categories][Slug][$eq]=${categorySlug}&populate=Cover,categories`);
   if (!data || !data.data) return [];
   return data.data.map(normalizePost);
 }
@@ -145,12 +140,10 @@ export async function fetchRelatedPosts(currentPost, limit = 3) {
     return [];
   }
   
-  // Get category IDs
   const categoryIds = currentPost.categories.map(c => c.id).join(',');
   
-  // Fetch posts that share at least one category, exclude current post
   const data = await fetchAPI(
-    `/api/blog-posts?filters[categories][id][$in]=${categoryIds}&filters[id][$ne]=${currentPost.id}&populate[Cover]=*&populate[categories]=*&pagination[limit]=${limit}`
+    `/api/blog-posts?filters[categories][id][$in]=${categoryIds}&filters[id][$ne]=${currentPost.id}&populate=Cover,categories&pagination[limit]=${limit}`
   );
   
   if (!data || !data.data) return [];

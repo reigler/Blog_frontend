@@ -163,13 +163,13 @@ export async function fetchPostsByCategory(categorySlug) {
   // Then get Covers for these posts
   const postIds = data.data.map(p => p.id);
   
-  // Only fetch covers if we have post IDs
   if (postIds.length === 0) {
     return data.data.map(normalizePost);
   }
   
-  // Use the correct syntax for multiple IDs
-  const coverData = await fetchAPI(`/api/blog-posts?filters[id][$in][]=${postIds.join('&filters[id][$in][]=')}&populate=Cover`);
+  // Build the ID filter correctly
+  const idFilters = postIds.map(id => `filters[id][$in][]=${id}`).join('&');
+  const coverData = await fetchAPI(`/api/blog-posts?${idFilters}&populate=Cover`);
   
   // Merge Cover data
   const mergedPosts = data.data.map(post => {
@@ -188,11 +188,12 @@ export async function fetchRelatedPosts(currentPost, limit = 3) {
     return [];
   }
   
-  const categoryIds = currentPost.categories.map(c => c.id).join(',');
+  // Build the category IDs filter correctly
+  const categoryFilters = currentPost.categories.map(c => `filters[categories][id][$in][]=${c.id}`).join('&');
   
   // Get related posts with categories
   const categoriesData = await fetchAPI(
-    `/api/blog-posts?filters[categories][id][$in]=${categoryIds}&filters[id][$ne]=${currentPost.id}&populate=categories&pagination[limit]=${limit}`
+    `/api/blog-posts?${categoryFilters}&filters[id][$ne]=${currentPost.id}&populate=categories&pagination[limit]=${limit}`
   );
   
   if (!categoriesData || !categoriesData.data || categoriesData.data.length === 0) {
@@ -206,8 +207,9 @@ export async function fetchRelatedPosts(currentPost, limit = 3) {
     return categoriesData.data.map(normalizePost);
   }
   
-  // Use the correct syntax for multiple IDs
-  const coverData = await fetchAPI(`/api/blog-posts?filters[id][$in][]=${postIds.join('&filters[id][$in][]=')}&populate=Cover`);
+  // Build the ID filter for covers correctly
+  const idFilters = postIds.map(id => `filters[id][$in][]=${id}`).join('&');
+  const coverData = await fetchAPI(`/api/blog-posts?${idFilters}&populate=Cover`);
   
   // Merge Cover data
   const mergedPosts = categoriesData.data.map(post => {

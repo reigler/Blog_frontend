@@ -12,33 +12,33 @@ export async function getStaticPaths() {
 
 const { slug } = Astro.params;
 const post = await fetchPostBySlug(slug);
-
-if (!post) {
-  return <p>Post not found</p>;
-}
 ---
 
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
-    <title>{post.Title}</title>
+    <title>{post?.Title || 'Post not found'}</title>
   </head>
   <body>
     <a href="/">← Back to all posts</a>
     
-    <article>
-      <h1>{post.Title}</h1>
-      
-      {post.cover?.data && (
-        <img 
-          src={`https://supreme-bubble-4e928774d0.strapiapp.com${post.cover.data.attributes.url}`}
-          alt={post.Title}
-          width="400"
-        />
-      )}
-      
-      <div set:html={post.Content} />
-    </article>
+    {post ? (
+      <article>
+        <h1>{post.Title}</h1>
+        
+        {post.cover?.data && (
+          <img 
+            src={`https://supreme-bubble-4e928774d0.strapiapp.com${post.cover.data.attributes.url}`}
+            alt={post.Title}
+            width="400"
+          />
+        )}
+        
+        <div set:html={post.Content} />
+      </article>
+    ) : (
+      <p>Post not found</p>
+    )}
   </body>
 </html>

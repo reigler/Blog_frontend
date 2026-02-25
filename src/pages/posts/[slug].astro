@@ -1,20 +1,29 @@
 ---
 // Dynamic route for single blog posts
 export async function getStaticPaths() {
-  const STRAPI_URL = import.meta.env.STRAPI_URL;
-  const response = await fetch(`${STRAPI_URL}/api/blog-posts`);
-  const posts = await response.json();
-  
-  return posts.data.map((post) => ({
-    params: { slug: post.attributes.slug },
-  }));
+  try {
+    const data = await fetchAPI('/api/blog-posts');
+    
+    if (!data || !data.data || !Array.isArray(data.data)) {
+      console.log('No posts found or invalid API response');
+      return [];
+    }
+    
+    return data.data.map((post) => ({
+      // CHANGE THIS: use post.attributes.Slug (capital S) instead of post.attributes.slug
+      params: { slug: post.attributes.Slug },
+    }));
+  } catch (error) {
+    console.error('Error fetching posts for static paths:', error);
+    return [];
+  }
 }
 
 const { slug } = Astro.params;
 const STRAPI_URL = import.meta.env.STRAPI_URL;
 
 const response = await fetch(
-  `${STRAPI_URL}/api/blog-posts?filters[slug][$eq]=${slug}&populate=cover`
+  `${STRAPI_URL}/api/blog-posts?filters[Slug][$eq]=${slug}&populate=cover`
 );
 const postData = await response.json();
 const post = postData.data[0];

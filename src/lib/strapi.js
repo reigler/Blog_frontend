@@ -2,12 +2,14 @@
 const STRAPI_URL = import.meta.env.STRAPI_URL;
 const BASE_URL = STRAPI_URL?.replace(/\/$/, '') || '';
 
+// Helper for media URLs
 export function getStrapiMediaUrl(path) {
   if (!path) return null;
   if (path.startsWith('http')) return path;
   return `${BASE_URL}${path}`;
 }
 
+// Core API fetch function
 export async function fetchAPI(path, options = {}) {
   const defaultOptions = {
     headers: {
@@ -34,40 +36,26 @@ export async function fetchAPI(path, options = {}) {
   }
 }
 
-// Helper to handle both API response formats
-export function normalizePost(post) {
-  // If the post has an attributes field (Strapi v4 format)
+// Normalize post data
+function normalizePost(post) {
   if (post.attributes) {
     return {
       id: post.id,
       ...post.attributes
     };
   }
-  // If it's the direct format (your current API)
   return post;
 }
 
-// Fetch posts WITH the correct Cover field populated
+// Export these two functions - ONCE each!
 export async function fetchPosts() {
-  // Use "Cover" with capital C - matching your schema
   const data = await fetchAPI('/api/blog-posts?populate=Cover');
   if (!data || !data.data) return [];
   return data.data.map(normalizePost);
 }
 
 export async function fetchPostBySlug(slug) {
-  // Use "Cover" with capital C - matching your schema
   const data = await fetchAPI(`/api/blog-posts?filters[Slug][$eq]=${slug}&populate=Cover`);
   if (!data || !data.data || data.data.length === 0) return null;
   return normalizePost(data.data[0]);
 }
-
-export async function fetchPosts() {
-  // During build, this will still work
-  const data = await fetchAPI('/api/blog-posts?populate=Cover');
-  if (!data || !data.data) return [];
-  return data.data.map(normalizePost);
-}
-
-// Add a helper to check if we're in build mode if needed
-export const isBuild = import.meta.env.STATIC_BUILD === 'true';

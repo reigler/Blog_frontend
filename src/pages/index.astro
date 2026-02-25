@@ -1,9 +1,8 @@
 ---
-// Fetch blog posts from Strapi
-const STRAPI_URL = import.meta.env.STRAPI_URL;
+import { fetchAPI, getStrapiMediaUrl } from '../lib/strapi';
 
-const response = await fetch(`${STRAPI_URL}/api/blog-posts?populate=cover`);
-const posts = await response.json();
+const data = await fetchAPI('/api/blog-posts?populate=cover');
+const posts = data.data;
 ---
 
 <html lang="en">
@@ -16,8 +15,8 @@ const posts = await response.json();
     <h1>My Blog Posts</h1>
     
     <main>
-      {
-        posts.data.map((post) => (
+      {posts && posts.length > 0 ? (
+        posts.map((post) => (
           <article>
             <h2>
               <a href={`/posts/${post.attributes.Slug}`}>
@@ -26,9 +25,9 @@ const posts = await response.json();
             </h2>
             <p>{post.attributes.description}</p>
             
-            {post.attributes.cover.data && (
+            {post.attributes.cover?.data && (
               <img 
-                src={`${STRAPI_URL}${post.attributes.cover.data.attributes.url}`}
+                src={getStrapiMediaUrl(post.attributes.cover.data.attributes.url)}
                 alt={post.attributes.title}
                 width="200"
               />
@@ -38,7 +37,9 @@ const posts = await response.json();
             <hr />
           </article>
         ))
-      }
+      ) : (
+        <p>No blog posts found.</p>
+      )}
     </main>
   </body>
 </html>

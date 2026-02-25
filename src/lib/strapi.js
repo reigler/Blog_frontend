@@ -186,15 +186,23 @@ export async function fetchRelatedPosts(currentPost, limit = 3) {
     `/api/blog-posts?filters[categories][id][$in]=${categoryIds}&filters[id][$ne]=${currentPost.id}&populate=categories&pagination[limit]=${limit}`
   );
   
-  if (!categoriesData || !categoriesData.data) return [];
+  if (!categoriesData || !categoriesData.data || categoriesData.data.length === 0) {
+    return [];
+  }
   
-  // Get Covers for these posts
+  // Get Covers for these posts - but only if there are posts
   const postIds = categoriesData.data.map(p => p.id).join(',');
+  
+  // Only fetch covers if we have post IDs
+  if (!postIds) {
+    return categoriesData.data.map(normalizePost);
+  }
+  
   const coverData = await fetchAPI(`/api/blog-posts?filters[id][$in]=${postIds}&populate=Cover`);
   
   // Merge Cover data
   const mergedPosts = categoriesData.data.map(post => {
-    const coverPost = coverData.data.find(p => p.id === post.id);
+    const coverPost = coverData?.data?.find(p => p.id === post.id);
     return {
       ...post,
       Cover: coverPost?.Cover || null

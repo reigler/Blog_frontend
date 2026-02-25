@@ -156,15 +156,24 @@ export async function fetchCategories() {
 export async function fetchPostsByCategory(categorySlug) {
   // Get posts with categories filtered
   const data = await fetchAPI(`/api/blog-posts?filters[categories][Slug][$eq]=${categorySlug}&populate=categories`);
-  if (!data || !data.data) return [];
+  if (!data || !data.data || data.data.length === 0) {
+    return [];
+  }
   
   // Then get Covers for these posts
-  const postIds = data.data.map(p => p.id).join(',');
-  const coverData = await fetchAPI(`/api/blog-posts?filters[id][$in]=${postIds}&populate=Cover`);
+  const postIds = data.data.map(p => p.id);
+  
+  // Only fetch covers if we have post IDs
+  if (postIds.length === 0) {
+    return data.data.map(normalizePost);
+  }
+  
+  // Use the correct syntax for multiple IDs
+  const coverData = await fetchAPI(`/api/blog-posts?filters[id][$in][]=${postIds.join('&filters[id][$in][]=')}&populate=Cover`);
   
   // Merge Cover data
   const mergedPosts = data.data.map(post => {
-    const coverPost = coverData.data.find(p => p.id === post.id);
+    const coverPost = coverData?.data?.find(p => p.id === post.id);
     return {
       ...post,
       Cover: coverPost?.Cover || null
@@ -190,15 +199,15 @@ export async function fetchRelatedPosts(currentPost, limit = 3) {
     return [];
   }
   
-  // Get Covers for these posts - but only if there are posts
-  const postIds = categoriesData.data.map(p => p.id).join(',');
+  // Get Covers for these posts
+  const postIds = categoriesData.data.map(p => p.id);
   
-  // Only fetch covers if we have post IDs
-  if (!postIds) {
+  if (postIds.length === 0) {
     return categoriesData.data.map(normalizePost);
   }
   
-  const coverData = await fetchAPI(`/api/blog-posts?filters[id][$in]=${postIds}&populate=Cover`);
+  // Use the correct syntax for multiple IDs
+  const coverData = await fetchAPI(`/api/blog-posts?filters[id][$in][]=${postIds.join('&filters[id][$in][]=')}&populate=Cover`);
   
   // Merge Cover data
   const mergedPosts = categoriesData.data.map(post => {

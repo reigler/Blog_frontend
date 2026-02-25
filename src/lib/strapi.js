@@ -65,7 +65,7 @@ export function getImageUrl(cover) {
   return null;
 }
 
-// Normalize category data
+// Normalize category data - WITHOUT description
 function normalizeCategory(category) {
   if (category.attributes) {
     return {
@@ -73,7 +73,6 @@ function normalizeCategory(category) {
       documentId: category.documentId,
       Name: category.attributes.Name,
       Slug: category.attributes.Slug,
-      Description: category.attributes.Description
     };
   }
   return {
@@ -81,7 +80,6 @@ function normalizeCategory(category) {
     documentId: category.documentId,
     Name: category.Name,
     Slug: category.Slug,
-    Description: category.Description
   };
 }
 
@@ -119,7 +117,6 @@ function normalizePost(post) {
 
 // Export functions with correct Strapi v5 populate syntax
 export async function fetchPosts() {
-  // Strapi v5 syntax: populate[field][populate][subfield]=*
   const data = await fetchAPI('/api/blog-posts?populate[Cover]=*&populate[categories]=*');
   if (!data || !data.data) return [];
   return data.data.map(normalizePost);

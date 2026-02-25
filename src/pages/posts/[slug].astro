@@ -1,6 +1,6 @@
 ---
 import BlogLayout from '/src/layouts/BlogLayout.astro';
-import { fetchPosts, fetchPostBySlug, getImageUrl } from '../../lib/strapi';
+import { fetchPosts, fetchPostBySlug, fetchRelatedPosts, getImageUrl } from '../../lib/strapi';
 
 export async function getStaticPaths() {
   const posts = await fetchPosts();
@@ -11,6 +11,7 @@ export async function getStaticPaths() {
 
 const { slug } = Astro.params;
 const post = await fetchPostBySlug(slug);
+const relatedPosts = post ? await fetchRelatedPosts(post, 3) : [];
 ---
 
 <BlogLayout title={post?.Title ? `${post.Title} - My Blog` : 'Post Not Found'}>
@@ -28,7 +29,7 @@ const post = await fetchPostBySlug(slug);
           Back to all posts
         </a>
 
-        <!-- Cover Image - Updated to use getImageUrl -->
+        <!-- Cover Image -->
         {post.Cover && (
           <div class="mb-8 rounded-lg overflow-hidden shadow-lg">
             <img 
@@ -41,6 +42,20 @@ const post = await fetchPostBySlug(slug);
 
         <!-- Post Header -->
         <header class="mb-8">
+          <!-- Categories -->
+          {post.categories && post.categories.length > 0 && (
+            <div class="flex flex-wrap gap-2 mb-4">
+              {post.categories.map((category) => (
+                <a
+                  href={`/categories/${category.Slug}`}
+                  class="text-sm bg-gray-100 text-gray-600 px-3 py-1 rounded-full hover:bg-gray-200 transition-colors"
+                >
+                  {category.Name}
+                </a>
+              ))}
+            </div>
+          )}
+          
           <h1 class="text-4xl font-bold text-gray-900 mb-4">{post.Title}</h1>
           <div class="flex items-center text-gray-500 text-sm">
             <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -59,6 +74,37 @@ const post = await fetchPostBySlug(slug);
           class="prose prose-lg max-w-none prose-headings:text-gray-900 prose-a:text-blue-600"
           set:html={post.Content} 
         />
+
+        <!-- Related Posts Section -->
+        {relatedPosts.length > 0 && (
+          <div class="mt-16 pt-8 border-t">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">You might also like</h2>
+            <div class="grid gap-6 md:grid-cols-3">
+              {relatedPosts.map((related) => (
+                <a 
+                  href={`/posts/${related.Slug}`}
+                  class="group block"
+                >
+                  {related.Cover && (
+                    <div class="aspect-w-16 aspect-h-9 mb-3 overflow-hidden rounded-lg">
+                      <img 
+                        src={getImageUrl(related.Cover)}
+                        alt={related.Title}
+                        class="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  )}
+                  <h3 class="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
+                    {related.Title}
+                  </h3>
+                  <p class="text-sm text-gray-500 mt-1 line-clamp-2">
+                    {related.Description}
+                  </p>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
       </article>
     ) : (
       <div class="text-center py-12">

@@ -64,7 +64,21 @@ export function getImageUrl(cover) {
   return null;
 }
 
-// Normalize post data
+// Normalize category data
+function normalizeCategory(category) {
+  if (category.attributes) {
+    return {
+      id: category.id,
+      documentId: category.documentId,
+      Name: category.attributes.Name,
+      Slug: category.attributes.Slug,
+      Description: category.attributes.Description
+    };
+  }
+  return category;
+}
+
+// Normalize post data with categories
 function normalizePost(post) {
   // Create a normalized post object
   const normalized = {
@@ -77,21 +91,63 @@ function normalizePost(post) {
     createdAt: post.createdAt,
     updatedAt: post.updatedAt,
     publishedAt: post.publishedAt,
-    Cover: post.Cover, // Keep the original Cover object
+    Cover: post.Cover,
   };
+  
+  // Add categories if they exist
+  if (post.categories) {
+    if (Array.isArray(post.categories)) {
+      normalized.categories = post.categories.map(normalizeCategory);
+    } else if (post.categories.data) {
+      normalized.categories = post.categories.data.map(normalizeCategory);
+    } else {
+      normalized.categories = [];
+    }
+  } else {
+    normalized.categories = [];
+  }
   
   return normalized;
 }
 
 // Export functions
 export async function fetchPosts() {
-  const data = await fetchAPI('/api/blog-posts?populate=Cover');
+  const data = await fetchAPI('/api/blog-posts?populate[Cover]=*&populate[categories]=*');
   if (!data || !data.data) return [];
   return data.data.map(normalizePost);
 }
 
 export async function fetchPostBySlug(slug) {
-  const data = await fetchAPI(`/api/blog-posts?filters[Slug][$eq]=${slug}&populate=Cover`);
+  const data = await fetchAPI(`/api/blog-posts?filters[Slug][$eq]=${slug}&populate[Cover]=*&populate[categories]=*`);
   if (!data || !data.data || data.data.length === 0) return null;
   return normalizePost(data.data[0]);
+}
+
+export async function fetchCategories() {
+  const data = await fetchAPI('/api/categories');
+  if (!data || !data.data) return [];
+  return data.data.map(normalizeCategory);
+}
+
+export async function fetchPostsByCategory(categorySlug) {
+  const data = await fetchAPI(`/api/blog-posts?filters[categories][Slug][$eq]=${categorySlug}&populate[Cover]=*&populate[categories]=*`);
+  if (!data || !data.data) return [];
+  return data.data.map(normalizePost);
+}
+
+export async function fetchRelatedPosts(currentPost, limit = 3) {
+  if (!currentPost.categories || currentPost.categories.length === 0) {
+    return [];
+  }
+  
+  // Get category IDs
+  const categoryIds = currentPost.categories.map(c => c.id).join(',');
+  
+  // Fetch posts that share at least one category, exclude current post
+  const data = await fetchAPI(
+    `/api/blog-posts?filters[categories][id][$in]=${categoryIds}&filters[id][$ne]=${currentPost.id}&populate[Cover]=*&populate[categories]=*&pagination[limit]=${limit}`
+  );
+  
+  if (!data || !data.data) return [];
+  return data.data.map(normalizePost);
 }

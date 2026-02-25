@@ -22,7 +22,7 @@ const posts = await fetchPosts();
       <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {posts.map((post) => (
           <article class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
-            {/* Cover Image - Updated to use getImageUrl */}
+            {/* Cover Image */}
             {post.Cover && (
               <div class="flex-shrink-0">
                 <img 
@@ -34,6 +34,20 @@ const posts = await fetchPosts();
             )}
             <div class="flex-1 p-6 flex flex-col justify-between">
               <div class="flex-1">
+                {/* Categories */}
+                {post.categories && post.categories.length > 0 && (
+                  <div class="flex flex-wrap gap-2 mb-3">
+                    {post.categories.map((category) => (
+                      <a
+                        href={`/categories/${category.Slug}`}
+                        class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full hover:bg-gray-200 transition-colors"
+                      >
+                        {category.Name}
+                      </a>
+                    ))}
+                  </div>
+                )}
+                
                 <h2 class="text-xl font-semibold text-gray-900 mb-2">
                   <a href={`/posts/${post.Slug}`} class="hover:text-blue-600 transition-colors">
                     {post.Title}

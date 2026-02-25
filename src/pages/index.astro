@@ -1,11 +1,11 @@
 ---
-import Layout from '../layouts/BlogLayout.astro';
+import BlogLayout from '../layouts/BlogLayout.astro';
 import { fetchPosts, getStrapiMediaUrl } from '../lib/strapi';
 
 const posts = await fetchPosts();
 ---
 
-<Layout title="My Blog - Home">
+<BlogLayout title="My Blog - Home">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <!-- Hero Section -->
     <div class="text-center mb-16">
@@ -59,4 +59,4 @@ const posts = await fetchPosts();
       </div>
     )}
   </div>
-</Layout>
+</BlogLayout>

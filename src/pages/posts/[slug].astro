@@ -1,5 +1,5 @@
 ---
-import Layout from '../../layouts/BlogLayout.astro';
+import BlogLayout from '../../layouts/BlogLayout.astro';
 import { fetchPosts, fetchPostBySlug, getStrapiMediaUrl } from '../../lib/strapi';
 
 export async function getStaticPaths() {
@@ -13,7 +13,7 @@ const { slug } = Astro.params;
 const post = await fetchPostBySlug(slug);
 ---
 
-<Layout title={post?.Title ? `${post.Title} - My Blog` : 'Post Not Found'}>
+<BlogLayout title={post?.Title ? `${post.Title} - My Blog` : 'Post Not Found'}>
   <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     {post ? (
       <article>
@@ -73,4 +73,4 @@ const post = await fetchPostBySlug(slug);
       </div>
     )}
   </div>
-</Layout>
+</BlogLayout>

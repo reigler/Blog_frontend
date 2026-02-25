@@ -2,11 +2,25 @@
 const STRAPI_URL = import.meta.env.STRAPI_URL;
 const BASE_URL = STRAPI_URL?.replace(/\/$/, '') || '';
 
+// Extract the base domain to construct media URL
+// If STRAPI_URL is https://supreme-bubble-4e928774d0.strapiapp.com
+// Then MEDIA_URL becomes https://supreme-bubble-4e928774d0.media.strapiapp.com
+const MEDIA_URL = BASE_URL.replace('.strapiapp.com', '.media.strapiapp.com');
+
 // Helper for media URLs
 export function getStrapiMediaUrl(path) {
   if (!path) return null;
+  
+  // If it's already a full URL, return it as is
   if (path.startsWith('http')) return path;
-  return `${BASE_URL}${path}`;
+  
+  // If it starts with /uploads, use the media URL
+  if (path.startsWith('/uploads')) {
+    return `${MEDIA_URL}${path}`;
+  }
+  
+  // Otherwise, assume it's a filename and construct the full path
+  return `${MEDIA_URL}/uploads${path.startsWith('/') ? path : '/' + path}`;
 }
 
 // Core API fetch function

@@ -107,17 +107,44 @@ function normalizePost(post) {
 
 // ===== EXPORTED FUNCTIONS =====
 
+// Fetch posts with all needed data by making multiple calls
 export async function fetchPosts() {
-  const data = await fetchAPI('/api/blog-posts?populate=Cover,categories');
-  if (!data || !data.data) return [];
-  return data.data.map(normalizePost);
+  // First, get posts with categories populated
+  const categoriesData = await fetchAPI('/api/blog-posts?populate=categories');
+  if (!categoriesData || !categoriesData.data) return [];
+  
+  // Then, get posts with Cover populated
+  const coverData = await fetchAPI('/api/blog-posts?populate=Cover');
+  if (!coverData || !coverData.data) return [];
+  
+  // Merge the data
+  const mergedPosts = categoriesData.data.map(post => {
+    const coverPost = coverData.data.find(p => p.id === post.id);
+    return {
+      ...post,
+      Cover: coverPost?.Cover || null
+    };
+  });
+  
+  return mergedPosts.map(normalizePost);
 }
 
 export async function fetchPostBySlug(slug) {
-  // Fix: Use correct filter syntax and populate
-  const data = await fetchAPI(`/api/blog-posts?filters[Slug][$eq]=${slug}&populate=Cover,categories`);
-  if (!data || !data.data || data.data.length === 0) return null;
-  return normalizePost(data.data[0]);
+  // Get post with categories
+  const categoriesData = await fetchAPI(`/api/blog-posts?filters[Slug][$eq]=${slug}&populate=categories`);
+  if (!categoriesData || !categoriesData.data || categoriesData.data.length === 0) return null;
+  
+  // Get same post with Cover
+  const coverData = await fetchAPI(`/api/blog-posts?filters[Slug][$eq]=${slug}&populate=Cover`);
+  if (!coverData || !coverData.data || coverData.data.length === 0) return null;
+  
+  // Merge the data
+  const post = {
+    ...categoriesData.data[0],
+    Cover: coverData.data[0]?.Cover || null
+  };
+  
+  return normalizePost(post);
 }
 
 export async function fetchCategories() {
@@ -127,9 +154,24 @@ export async function fetchCategories() {
 }
 
 export async function fetchPostsByCategory(categorySlug) {
-  const data = await fetchAPI(`/api/blog-posts?filters[categories][Slug][$eq]=${categorySlug}&populate=Cover,categories`);
+  // Get posts with categories filtered
+  const data = await fetchAPI(`/api/blog-posts?filters[categories][Slug][$eq]=${categorySlug}&populate=categories`);
   if (!data || !data.data) return [];
-  return data.data.map(normalizePost);
+  
+  // Then get Covers for these posts
+  const postIds = data.data.map(p => p.id).join(',');
+  const coverData = await fetchAPI(`/api/blog-posts?filters[id][$in]=${postIds}&populate=Cover`);
+  
+  // Merge Cover data
+  const mergedPosts = data.data.map(post => {
+    const coverPost = coverData.data.find(p => p.id === post.id);
+    return {
+      ...post,
+      Cover: coverPost?.Cover || null
+    };
+  });
+  
+  return mergedPosts.map(normalizePost);
 }
 
 export async function fetchRelatedPosts(currentPost, limit = 3) {
@@ -139,10 +181,25 @@ export async function fetchRelatedPosts(currentPost, limit = 3) {
   
   const categoryIds = currentPost.categories.map(c => c.id).join(',');
   
-  const data = await fetchAPI(
-    `/api/blog-posts?filters[categories][id][$in]=${categoryIds}&filters[id][$ne]=${currentPost.id}&populate=Cover,categories&pagination[limit]=${limit}`
+  // Get related posts with categories
+  const categoriesData = await fetchAPI(
+    `/api/blog-posts?filters[categories][id][$in]=${categoryIds}&filters[id][$ne]=${currentPost.id}&populate=categories&pagination[limit]=${limit}`
   );
   
-  if (!data || !data.data) return [];
-  return data.data.map(normalizePost);
+  if (!categoriesData || !categoriesData.data) return [];
+  
+  // Get Covers for these posts
+  const postIds = categoriesData.data.map(p => p.id).join(',');
+  const coverData = await fetchAPI(`/api/blog-posts?filters[id][$in]=${postIds}&populate=Cover`);
+  
+  // Merge Cover data
+  const mergedPosts = categoriesData.data.map(post => {
+    const coverPost = coverData.data.find(p => p.id === post.id);
+    return {
+      ...post,
+      Cover: coverPost?.Cover || null
+    };
+  });
+  
+  return mergedPosts.map(normalizePost);
 }

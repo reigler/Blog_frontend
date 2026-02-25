@@ -115,9 +115,9 @@ function normalizePost(post) {
   return normalized;
 }
 
-// Export functions with correct Strapi v5 populate syntax
+// ===== EXPORTED FUNCTIONS =====
+
 export async function fetchPosts() {
-  // Use simpler populate syntax
   const data = await fetchAPI('/api/blog-posts?populate=Cover,categories');
   if (!data || !data.data) return [];
   return data.data.map(normalizePost);
@@ -127,6 +127,13 @@ export async function fetchPostBySlug(slug) {
   const data = await fetchAPI(`/api/blog-posts?filters[Slug][$eq]=${slug}&populate=Cover,categories`);
   if (!data || !data.data || data.data.length === 0) return null;
   return normalizePost(data.data[0]);
+}
+
+// ADD THIS MISSING FUNCTION
+export async function fetchCategories() {
+  const data = await fetchAPI('/api/categories');
+  if (!data || !data.data) return [];
+  return data.data.map(normalizeCategory);
 }
 
 export async function fetchPostsByCategory(categorySlug) {

@@ -61,3 +61,13 @@ export async function fetchPostBySlug(slug) {
   if (!data || !data.data || data.data.length === 0) return null;
   return normalizePost(data.data[0]);
 }
+
+export async function fetchPosts() {
+  // During build, this will still work
+  const data = await fetchAPI('/api/blog-posts?populate=Cover');
+  if (!data || !data.data) return [];
+  return data.data.map(normalizePost);
+}
+
+// Add a helper to check if we're in build mode if needed
+export const isBuild = import.meta.env.STATIC_BUILD === 'true';

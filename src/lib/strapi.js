@@ -3,8 +3,6 @@ const STRAPI_URL = import.meta.env.STRAPI_URL;
 const BASE_URL = STRAPI_URL?.replace(/\/$/, '') || '';
 
 // Extract the base domain to construct media URL
-// If STRAPI_URL is https://supreme-bubble-4e928774d0.strapiapp.com
-// Then MEDIA_URL becomes https://supreme-bubble-4e928774d0.media.strapiapp.com
 const MEDIA_URL = BASE_URL.replace('.strapiapp.com', '.media.strapiapp.com');
 
 // Helper for media URLs
@@ -35,7 +33,6 @@ export async function fetchAPI(path, options = {}) {
   const requestUrl = path.startsWith('http') ? path : `${BASE_URL}${path}`;
   
   try {
-    console.log('Fetching from:', requestUrl);
     const response = await fetch(requestUrl, mergedOptions);
     
     if (!response.ok) {
@@ -50,18 +47,43 @@ export async function fetchAPI(path, options = {}) {
   }
 }
 
-// Normalize post data
-function normalizePost(post) {
-  if (post.attributes) {
-    return {
-      id: post.id,
-      ...post.attributes
-    };
+// Helper to get the best available image URL
+export function getImageUrl(cover) {
+  if (!cover) return null;
+  
+  // Try to get large format first, then medium, then small, then original
+  if (cover.formats) {
+    if (cover.formats.large?.url) return cover.formats.large.url;
+    if (cover.formats.medium?.url) return cover.formats.medium.url;
+    if (cover.formats.small?.url) return cover.formats.small.url;
   }
-  return post;
+  
+  // Fall back to original URL
+  if (cover.url) return cover.url;
+  
+  return null;
 }
 
-// Export these two functions - ONCE each!
+// Normalize post data
+function normalizePost(post) {
+  // Create a normalized post object
+  const normalized = {
+    id: post.id,
+    documentId: post.documentId,
+    Title: post.Title,
+    Slug: post.Slug,
+    Content: post.Content,
+    Description: post.Description,
+    createdAt: post.createdAt,
+    updatedAt: post.updatedAt,
+    publishedAt: post.publishedAt,
+    Cover: post.Cover, // Keep the original Cover object
+  };
+  
+  return normalized;
+}
+
+// Export functions
 export async function fetchPosts() {
   const data = await fetchAPI('/api/blog-posts?populate=Cover');
   if (!data || !data.data) return [];

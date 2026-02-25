@@ -1,6 +1,6 @@
 ---
 import BlogLayout from '/src/layouts/BlogLayout.astro';
-import { fetchPosts, getStrapiMediaUrl } from '../lib/strapi';
+import { fetchPosts, getImageUrl } from '../lib/strapi';
 
 const posts = await fetchPosts();
 ---
@@ -22,11 +22,12 @@ const posts = await fetchPosts();
       <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {posts.map((post) => (
           <article class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
-            {post.Cover?.data && (
+            {/* Cover Image - Updated to use getImageUrl */}
+            {post.Cover && (
               <div class="flex-shrink-0">
                 <img 
                   class="h-48 w-full object-cover"
-                  src={getStrapiMediaUrl(post.Cover.data.attributes.url)}
+                  src={getImageUrl(post.Cover)}
                   alt={post.Title}
                 />
               </div>

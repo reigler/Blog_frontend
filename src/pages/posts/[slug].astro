@@ -1,6 +1,6 @@
 ---
 import BlogLayout from '/src/layouts/BlogLayout.astro';
-import { fetchPosts, fetchPostBySlug, getStrapiMediaUrl } from '../../lib/strapi';
+import { fetchPosts, fetchPostBySlug, getImageUrl } from '../../lib/strapi';
 
 export async function getStaticPaths() {
   const posts = await fetchPosts();
@@ -28,11 +28,11 @@ const post = await fetchPostBySlug(slug);
           Back to all posts
         </a>
 
-        <!-- Cover Image -->
-        {post.Cover?.data && (
+        <!-- Cover Image - Updated to use getImageUrl -->
+        {post.Cover && (
           <div class="mb-8 rounded-lg overflow-hidden shadow-lg">
             <img 
-              src={getStrapiMediaUrl(post.Cover.data.attributes.url)}
+              src={getImageUrl(post.Cover)}
               alt={post.Title}
               class="w-full h-[400px] object-cover"
             />

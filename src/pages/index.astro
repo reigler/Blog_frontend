@@ -1,8 +1,7 @@
 ---
-import { fetchAPI, getStrapiMediaUrl } from '../lib/strapi';
+import { fetchPosts, getStrapiMediaUrl } from '../lib/strapi';
 
-const data = await fetchAPI('/api/blog-posts?populate=cover');
-const posts = data.data;
+const posts = await fetchPosts();
 ---
 
 <html lang="en">
@@ -15,25 +14,25 @@ const posts = data.data;
     <h1>My Blog Posts</h1>
     
     <main>
-      {posts && posts.length > 0 ? (
+      {posts.length > 0 ? (
         posts.map((post) => (
           <article>
             <h2>
-              <a href={`/posts/${post.attributes.Slug}`}>
-                {post.attributes.title}
+              <a href={`/posts/${post.Slug}`}>  {/* Direct property, not post.attributes.Slug */}
+                {post.Title}  {/* Direct property */}
               </a>
             </h2>
-            <p>{post.attributes.description}</p>
+            <p>{post.Description}</p>  {/* Direct property */}
             
-            {post.attributes.cover?.data && (
+            {post.cover?.data && (
               <img 
-                src={getStrapiMediaUrl(post.attributes.cover.data.attributes.url)}
-                alt={post.attributes.title}
+                src={getStrapiMediaUrl(post.cover.data.attributes.url)}
+                alt={post.Title}
                 width="200"
               />
             )}
             
-            <a href={`/posts/${post.attributes.Slug}`}>Read more →</a>
+            <a href={`/posts/${post.Slug}`}>Read more →</a>
             <hr />
           </article>
         ))

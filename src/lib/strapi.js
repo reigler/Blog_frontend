@@ -41,3 +41,29 @@ export async function fetchAPI(path, options = {}) {
     throw error;
   }
 }
+
+// Helper to handle both API response formats
+export function normalizePost(post) {
+  // If the post has an attributes field (Strapi v4 format)
+  if (post.attributes) {
+    return {
+      id: post.id,
+      ...post.attributes
+    };
+  }
+  // If it's the direct format (your current API)
+  return post;
+}
+
+// Update your fetchAPI function or create a new one
+export async function fetchPosts() {
+  const data = await fetchAPI('/api/blog-posts?populate=cover');
+  if (!data || !data.data) return [];
+  return data.data.map(normalizePost);
+}
+
+export async function fetchPostBySlug(slug) {
+  const data = await fetchAPI(`/api/blog-posts?filters[Slug][$eq]=${slug}&populate=cover`);
+  if (!data || !data.data || data.data.length === 0) return null;
+  return normalizePost(data.data[0]);
+}

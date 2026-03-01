@@ -1,6 +1,14 @@
 ---
 import BlogLayout from '/src/layouts/BlogLayout.astro';
 import { fetchPosts, fetchPostBySlug, fetchRelatedPosts, getImageUrl } from '../../lib/strapi';
+import { marked } from 'marked';
+
+// Configure marked for better Markdown rendering
+marked.setOptions({
+  breaks: true, // Convert line breaks to <br>
+  gfm: true, // GitHub Flavored Markdown
+  headerIds: false, // Don't add ids to headers
+});
 
 export async function getStaticPaths() {
   const posts = await fetchPosts();
@@ -12,6 +20,9 @@ export async function getStaticPaths() {
 const { slug } = Astro.params;
 const post = await fetchPostBySlug(slug);
 const relatedPosts = post ? await fetchRelatedPosts(post, 3) : [];
+
+// Convert Markdown to HTML
+const contentHtml = post ? marked.parse(post.Content) : '';
 ---
 
 <BlogLayout title={post?.Title ? `${post.Title} - My Blog` : 'Post Not Found'}>
@@ -69,10 +80,10 @@ const relatedPosts = post ? await fetchRelatedPosts(post, 3) : [];
           </div>
         </header>
 
-        <!-- Post Content - Now directly rendered (simplified!) -->
+        <!-- Post Content - Now with proper Markdown processing -->
         <div 
           class="prose prose-lg max-w-none prose-headings:text-gray-900 prose-a:text-blue-600 prose-img:rounded-lg"
-          set:html={post.Content} 
+          set:html={contentHtml} 
         />
 
         <!-- Related Posts Section -->

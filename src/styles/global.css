@@ -1,1 +1,47 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@layer base {
+  h1 {
+    @apply text-4xl font-bold text-gray-900 mt-8 mb-4;
+  }
+  h2 {
+    @apply text-3xl font-semibold text-gray-800 mt-6 mb-3;
+  }
+  h3 {
+    @apply text-2xl font-medium text-gray-700 mt-4 mb-2;
+  }
+  blockquote {
+    @apply border-l-4 border-gray-300 bg-gray-50 p-4 rounded-r-lg my-4;
+  }
+  code {
+    @apply bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded text-sm font-mono;
+  }
+  pre {
+    @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto my-4;
+  }
+  pre code {
+    @apply bg-transparent text-inherit p-0;
+  }
+  table {
+    @apply w-full border-collapse my-6;
+  }
+  th {
+    @apply bg-gray-100 text-left p-3 font-semibold border-b-2 border-gray-300;
+  }
+  td {
+    @apply p-3 border-b border-gray-200;
+  }
+  ul, ol {
+    @apply pl-6 my-4;
+  }
+  li {
+    @apply mb-1;
+  }
+  ul {
+    @apply list-disc;
+  }
+  ol {
+    @apply list-decimal;
+  }
+}

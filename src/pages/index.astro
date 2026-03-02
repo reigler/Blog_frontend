@@ -17,11 +17,25 @@ const posts = await fetchPosts();
       </p>
     </div>
 
+    <!-- Search Bar -->
+    <div class="max-w-xl mx-auto mb-8">
+      <input 
+        type="text" 
+        id="search-input"
+        placeholder="Search posts by title or description..." 
+        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
+      />
+    </div>
+
     <!-- Blog Posts Grid -->
-    {posts.length > 0 ? (
-      <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-        {posts.map((post) => (
-          <article class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
+    <div id="posts-grid" class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+      {posts.length > 0 ? (
+        posts.map((post) => (
+          <article 
+            class="post-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col h-full"
+            data-title={post.Title.toLowerCase()}
+            data-description={post.Description.toLowerCase()}
+          >
             {/* Cover Image */}
             {post.Cover && (
               <div class="flex-shrink-0">
@@ -66,12 +80,70 @@ const posts = await fetchPosts();
               </a>
             </div>
           </article>
-        ))}
-      </div>
-    ) : (
-      <div class="text-center py-12">
-        <p class="text-gray-500 text-lg">No blog posts yet. Check back soon!</p>
-      </div>
-    )}
+        ))
+      ) : (
+        <div class="text-center py-12 col-span-full">
+          <p class="text-gray-500 text-lg">No blog posts yet. Check back soon!</p>
+        </div>
+      )}
+    </div>
+
+    <!-- No Results Message -->
+    <div id="no-results" class="hidden text-center py-12 col-span-full">
+      <p class="text-gray-500 text-lg">No posts match your search. Try different keywords!</p>
+    </div>
+
+    <!-- Newsletter Signup -->
+    <div class="max-w-2xl mx-auto mt-16 p-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl text-white shadow-xl">
+      <h3 class="text-2xl font-bold mb-2">Never miss a post</h3>
+      <p class="text-blue-100 mb-6">Get the latest articles straight to your inbox</p>
+      <form class="flex flex-col sm:flex-row gap-3">
+        <input 
+          type="email" 
+          placeholder="Your email address" 
+          class="flex-1 px-4 py-3 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-300 focus:outline-none"
+          required
+        />
+        <button class="px-6 py-3 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors shadow-md">
+          Subscribe
+        </button>
+      </form>
+      <p class="text-xs text-blue-200 mt-4">We respect your privacy. Unsubscribe at any time.</p>
+    </div>
   </div>
 </BlogLayout>
+
+<script>
+  // Search functionality
+  const searchInput = document.getElementById('search-input');
+  const postsGrid = document.getElementById('posts-grid');
+  const noResults = document.getElementById('no-results');
+  const postCards = document.querySelectorAll('.post-card');
+
+  searchInput.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase().trim();
+    let visibleCount = 0;
+
+    postCards.forEach(card => {
+      const title = card.dataset.title;
+      const description = card.dataset.description;
+      const matches = title.includes(query) || description.includes(query);
+      
+      if (matches || query === '') {
+        card.style.display = 'flex';
+        visibleCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    // Show/hide no results message
+    if (visibleCount === 0 && query !== '') {
+      noResults.classList.remove('hidden');
+      postsGrid.classList.add('hidden');
+    } else {
+      noResults.classList.add('hidden');
+      postsGrid.classList.remove('hidden');
+    }
+  });
+</script>
